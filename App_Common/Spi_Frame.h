@@ -1,0 +1,8 @@
+//
+// Created by hp on 5/3/2026.
+//
+
+#ifndef STM32_TEMPLATE_SPI_FRAME_H
+#define STM32_TEMPLATE_SPI_FRAME_H
+
+#endif //STM32_TEMPLATE_SPI_FRAME_H
