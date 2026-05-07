@@ -5,6 +5,7 @@
  *  Author    : AbdallahDarwish
  */
 #include "Exti.h"
+#include "Std_Types.h"
 
 typedef struct {
     volatile uint32 IMR;

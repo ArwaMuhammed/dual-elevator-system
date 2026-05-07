@@ -7,7 +7,7 @@
 
 #include "Pwm.h"
 #include "Timer_Private.h"   /* TimerType struct + base addresses */
-#include "Bit_Math.h"
+#include "Bit_Operations.h"
 #include "Timer.h"
 
 static uint32 Pwm_BaseAddresses[4] = {TIM2_BASE_ADDR, TIM3_BASE_ADDR, TIM4_BASE_ADDR,TIM5_BASE_ADDR};

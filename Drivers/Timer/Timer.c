@@ -7,7 +7,7 @@
 
 #include "Timer.h"
 #include "Timer_Private.h"
-#include "Bit_Math.h"
+#include "Bit_Operations.h"
 #include "Nvic.h"
 
 #define NUM_OF_TIMERS 4U

@@ -1,10 +1,7 @@
 /**
  * Gpio.c
  *
- *  Created on: 4/15/2025
- *  Author    : AbdallahDarwish
  */
-
 
 #include <Std_Types.h>
 #include "Gpio.h"
@@ -52,4 +49,22 @@ uint8 Gpio_ReadPin(uint8 PortName, uint8 PinNum) {
     data = (gpioDevice->GPIO_IDR & (0x1 << PinNum)) >> PinNum;
 
     return data;
+}
+
+void Gpio_SetAF(uint8 PortName, uint8 PinNumber, uint8 AfNumber) {
+    uint8 addressIndex = PortName - GPIO_A;
+    GpioType* gpioDevice = (GpioType*) addressMap[addressIndex];
+
+    if (PinNumber <= 7U) {
+        /* Pins 0–7 are controlled by AFRL.
+         * Each pin occupies 4 bits: pin N → bits [(N*4)+3 : N*4] */
+        gpioDevice->GPIO_AFRL &= ~((uint32)0x0F << (PinNumber * 4U));
+        gpioDevice->GPIO_AFRL |=  ((uint32)AfNumber << (PinNumber * 4U));
+    } else {
+        /* Pins 8–15 are controlled by AFRH.
+         * Offset within AFRH = PinNumber - 8 */
+        uint8 pinOffset = PinNumber - 8U;
+        gpioDevice->GPIO_AFRH &= ~((uint32)0x0F << (pinOffset * 4U));
+        gpioDevice->GPIO_AFRH |=  ((uint32)AfNumber << (pinOffset * 4U));
+    }
 }
