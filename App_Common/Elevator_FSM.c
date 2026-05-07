@@ -26,6 +26,7 @@
 #include "Elevator_FSM.h"
 #include "Pwm.h"
 #include "Timer.h"
+#include "Std_Types.h"
 
 /* ── Motor PWM config (matches main.c init) ─────────────────── */
 #define MOTOR_TIMER_ID   TIMER2

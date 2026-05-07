@@ -138,13 +138,13 @@ void EXTI9_5_IRQHandler(void) {
         if (ExtiCallbacks[8]) {
             ExtiCallbacks[8]();
         }
-        EXTI->PR |= (0x01 << 8); // Clear pending bit
+        EXTI->PR |= (0x01 << 9); // Clear pending bit
     }
     if (EXTI->PR & (0x01 << 9)) {
         if (ExtiCallbacks[9]) {
             ExtiCallbacks[9]();
         }
-        EXTI->PR |= (0x01 << 8); // Clear pending bit
+        EXTI->PR |= (0x01 << 9); // Clear pending bit
     }
 }
 
