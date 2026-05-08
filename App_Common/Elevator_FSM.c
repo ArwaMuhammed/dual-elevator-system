@@ -34,18 +34,19 @@
 
 /* ── Door timer config ──────────────────────────────────────── */
 #define DOOR_TIMER_ID    TIMER4
+#define DOOR_TICK_MS     10U
 
 /* ── Forward declarations of private helpers ────────────────── */
 static uint8   FSM_FindNextFloor(ElevatorData_t *elevator);
 static boolean FSM_HasAnyRequest(ElevatorData_t *elevator);
 static void    FSM_SetMotorSpeed(uint8 dutyPercent);
 static void    FSM_StartDoorTimer(ElevatorData_t *elevator);
-static void    FSM_DoorTimerCallback(void);
 
 /* ── Single pointer used by the door-timer callback ─────────── */
 /* The callback has no parameters (TimerCallback signature), so  */
 /* we keep a module-level pointer to the active elevator.        */
 static volatile ElevatorData_t *FSM_ActiveElevator = (void*)0;
+static volatile uint16 FSM_DoorTicksRemaining = 0U;
 
 /* ═══════════════════════════════════════════════════════════════
  *  Public API
@@ -192,6 +193,15 @@ void ElevatorFSM_Tick(ElevatorData_t *elevator)
          * ════════════════════════════════════════════ */
         case ELEVATOR_STATE_DOORS_OPEN:
         {
+            if (FSM_DoorTicksRemaining > 0U)
+            {
+                FSM_DoorTicksRemaining--;
+                if (FSM_DoorTicksRemaining == 0U)
+                {
+                    elevator->DoorTimerExpired = TRUE;
+                }
+            }
+
             if (elevator->DoorTimerExpired == TRUE)
             {
                 __asm volatile ("CPSID I");
@@ -364,17 +374,5 @@ static void FSM_SetMotorSpeed(uint8 dutyPercent)
 static void FSM_StartDoorTimer(ElevatorData_t *elevator)
 {
     FSM_ActiveElevator = elevator;
-    Timer_DelayMsAsync(DOOR_TIMER_ID, DOOR_OPEN_DURATION_MS, FSM_DoorTimerCallback);
-}
-
-/**
- * TIM4 callback — fired from ISR context after 3 seconds.
- * Only sets a flag; all logic runs in ElevatorFSM_Tick.
- */
-static void FSM_DoorTimerCallback(void)
-{
-    if (FSM_ActiveElevator != (void*)0)
-    {
-        FSM_ActiveElevator->DoorTimerExpired = TRUE;
-    }
+    FSM_DoorTicksRemaining = (uint16)((DOOR_OPEN_DURATION_MS + (DOOR_TICK_MS - 1U)) / DOOR_TICK_MS);
 }

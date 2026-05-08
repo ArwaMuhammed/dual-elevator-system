@@ -8,7 +8,6 @@ Contains all shared logic used by both MCUs.
 
 * Elevator finite state machine (FSM)
 * Shared data structures (states, directions, requests)
-* SPI communication frame definition and utilities
 
 This layer ensures both elevators follow consistent behavior.
 
@@ -16,15 +15,12 @@ This layer ensures both elevators follow consistent behavior.
 
 ### 🔹 `Master_App`
 
-Implements the logic for the Master MCU (Dispatcher + Elevator A).
+Implements the logic for the Master MCU (Elevator A).
 
 Responsibilities:
 
-* Reads hallway and cabin requests
-* Runs the task allocation (dispatcher) algorithm
+* Reads cabin requests
 * Controls Elevator A locally
-* Sends commands to the Slave MCU via SPI
-* Outputs system telemetry over UART
 
 This module acts as the **decision-making brain** of the system.
 
@@ -37,8 +33,6 @@ Implements the logic for the Slave MCU (Elevator B).
 Responsibilities:
 
 * Controls Elevator B using the shared FSM
-* Receives commands from the Master via SPI
-* Sends current state and status back to the Master
 
 This module acts as an **execution unit** with no independent decision-making.
 
@@ -93,3 +87,56 @@ The project will be developed incrementally to ensure stability and proper integ
 * Validate system behavior under all conditions
 * Optimize performance and clean architecture
 
+---
+
+## Standalone Mode (No SPI Link)
+
+The current firmware runs both boards independently with no SPI connection.
+Leave PB3/PB4/PB5/PB6 unconnected between boards.
+
+## Hardware Pin Map (EXTI-safe)
+
+### Master MCU (Board A)
+
+Cabin buttons (pull-up, falling edge, button to GND):
+* Floor 1: PA10 (EXTI10)
+* Floor 2: PA11 (EXTI11)
+* Floor 3: PA12 (EXTI12)
+* Floor 4: PA15 (EXTI15)
+
+Floor sensors (pull-down, rising edge, button to 3.3V):
+* Sensor 1: PB0 (EXTI0)
+* Sensor 2: PB1 (EXTI1)
+* Sensor 3: PB8 (EXTI8)
+* Sensor 4: PB9 (EXTI9)
+
+Emergency stop (pull-up, falling edge, button to GND):
+* PC13 (EXTI13)
+
+PWM motor LED:
+* PA5 (TIM2_CH1) -> LED + 220 ohm -> GND
+
+
+### Slave MCU (Board B)
+
+Cabin buttons (pull-up, falling edge, button to GND):
+* Floor 1: PA10 (EXTI10)
+* Floor 2: PA11 (EXTI11)
+* Floor 3: PA12 (EXTI12)
+* Floor 4: PA15 (EXTI15)
+
+Floor sensors (pull-down, rising edge, button to 3.3V):
+* Sensor 1: PB0 (EXTI0)
+* Sensor 2: PB1 (EXTI1)
+* Sensor 3: PB8 (EXTI8)
+* Sensor 4: PB9 (EXTI9)
+
+Emergency stop (pull-up, falling edge, button to GND):
+* PC13 (EXTI13)
+
+PWM motor LED:
+* PA5 (TIM2_CH1) -> LED + 220 ohm -> GND
+
+## Quick Self-Test (Host)
+
+No host-side test is required in standalone mode.

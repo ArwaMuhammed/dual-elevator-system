@@ -45,33 +45,6 @@ void Timer_Stop(uint8 TimerId) {
     CLEAR_BIT(tim->CR1, CR1_CEN);
 }
 
-/**
- *  Synchronous delay — blocks until timer overflows
- *  16 MHz HSI  ÷  (PSC+1 = 16000) = 1 kHz  →  1 tick = 1 ms
- */
-void Timer_DelayMs(uint8 TimerId, uint32 DelayMs) {
-    TimerType *timer =(TimerType *)Timer_BaseAddresses[TimerId - TIMER2];
-
-    timer->CR1 = 0; // Stop & reset
-    timer->PSC = 15999U / 3;
-    timer->ARR = (uint16) (DelayMs - 1);
-    timer->CNT = 0;
-
-    SET_BIT(timer->EGR, EGR_UG); // Load shadow registers
-    timer->SR = 0; // Clear UIF caused by UG
-
-    SET_BIT(timer->CR1, CR1_OPM); // One-pulse mode
-    SET_BIT(timer->CR1, CR1_CEN); // Start counting
-
-    while (!READ_BIT(timer->SR, SR_UIF)) {
-        // Poll – CPU is blocked here
-    }
-
-    timer->SR = 0; // Clear UIF
-    CLEAR_BIT(timer->CR1, CR1_CEN); // Stop counter
-}
-
-
 void Timer_DelayMsAsync(uint8 TimerId, uint32 DelayMs, TimerCallback Callback) {
     TimerType *timer =(TimerType *)Timer_BaseAddresses[TimerId - TIMER2];
     uint8 index = TimerId - TIMER2;
