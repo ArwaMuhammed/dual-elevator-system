@@ -8,7 +8,26 @@
 #include "Dispatcher.h"
 #include "Elevator_FSM.h"
 #include "Elevator_Types.h"
+#include <stdio.h>
+#include "Usart.h"
+/* Stub for _sbrk to satisfy linker when using standard C library functions like sprintf */
+#include <sys/stat.h>
 
+void *_sbrk(int incr);
+void *_sbrk(int incr)
+{
+    extern char end asm("end"); /* Defined by the linker */
+    static char *heap_end;
+    char *prev_heap_end;
+
+    if (heap_end == 0)
+        heap_end = &end;
+
+    prev_heap_end = heap_end;
+    heap_end += incr;
+
+    return (void *)prev_heap_end;
+}
 #define NVIC_IPR_BASE   ((volatile uint8 *)0xE000E400)
 
 #define IRQ_EXTI0       6U
@@ -26,7 +45,10 @@
 
 #define SPI_CS_PORT     GPIO_B
 #define SPI_CS_PIN      6U
-
+static uint8 TelemetryTickCounter = 0U;
+static char TelemetryBuffer[256];
+static boolean SpiCommFault = FALSE;
+// static uint8 SpiMissedFrames = 0U;
 static volatile ElevatorData_t masterElevator;
 static ElevatorData_t slaveElevatorShadow;
 
@@ -148,7 +170,26 @@ static void Master_BuildTxFrame(SpiFrame_t *frame)
                    speed,
                    frame);
 }
+static void Master_SendTelemetry(void)
+{
+    uint8 hallCalls = Dispatcher_GetHallCallMask();
 
+    /* Format the data string */
+    sprintf(TelemetryBuffer,
+        "\r\n--- ELEVATOR TELEMETRY ---\r\n"
+        "Master : State = %d | Floor = %d \r\n"
+        "Slave  : State = %d | Floor = %d \r\n"
+        "System : HallCalls = 0x%02X | SlavePendReq = 0x%02X\r\n"
+        "SPI IPC: %s\r\n"
+        "--------------------------\r\n",
+        masterElevator.State, masterElevator.CurrentFloor,
+        slaveElevatorShadow.State, slaveElevatorShadow.CurrentFloor,
+        hallCalls, PendingSlaveRequestsMask,
+        (SpiCommFault == TRUE) ? "FAULT (TIMEOUT)" : "OK");
+
+    /* Transmit the string using your USART2 driver */
+    Usart2_TransmitString(TelemetryBuffer);
+}
 static void Master_SpiExchange(void)
 {
     SpiFrame_t txFrame;
@@ -208,6 +249,9 @@ static void System_Init(void)
     Rcc_Enable(RCC_TIM4);
 
     Rcc_Enable(RCC_SPI1);
+    /* Enable clocks for USART2 (PD5/PD6) */
+    Rcc_Enable(RCC_GPIOD);
+    Rcc_Enable(RCC_USART2);
 
     /*
      * Master pin mapping:
@@ -318,13 +362,14 @@ static void System_Init(void)
     ElevatorFSM_Init(&slaveElevatorShadow);
 
     Dispatcher_Init();
-
+    Usart2_Init();
     FSM_RearmTick();
 }
 
 int main(void)
 {
     System_Init();
+
 
     while (1)
     {
@@ -338,11 +383,20 @@ int main(void)
 
             Master_HandleHallRequests();
 
+            /* SPI Tick: Every 50ms (5 * 10ms) */
             SpiTickCounter++;
             if (SpiTickCounter >= 5U)
             {
                 SpiTickCounter = 0U;
                 Master_SpiExchange();
+            }
+
+            /* TELEMETRY TICK: Every 500ms (50 * 10ms) */
+            TelemetryTickCounter++;
+            if (TelemetryTickCounter >= 50U)
+            {
+                TelemetryTickCounter = 0U;
+                Master_SendTelemetry();
             }
 
             FSM_RearmTick();

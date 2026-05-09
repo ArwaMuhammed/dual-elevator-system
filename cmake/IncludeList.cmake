@@ -16,6 +16,7 @@ set(INCLUDE_LIST ${INCLUDE_LIST}
         ${PROJECT_PATH}/Drivers/Spi
         ${PROJECT_PATH}/Drivers/Timer
         ${PROJECT_PATH}/Drivers/Usart
+        ${PROJECT_PATH}/Drivers/Dma
 )
 
 if (USE_HAL)

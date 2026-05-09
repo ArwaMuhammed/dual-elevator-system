@@ -24,6 +24,8 @@ set(SLAVE_EXECUTABLE  Slave)
 add_executable(${MASTER_EXECUTABLE}
         ${MASTER_SOURCE_LIST}
         ${STARTUP_BASE_DIR}/${SERIES_FOLDER}/${MAPPED_DEVICE}.s
+        Drivers/Dma/Dma.h
+        Drivers/Dma/Dma.c
 )
 
 add_executable(${SLAVE_EXECUTABLE}

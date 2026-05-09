@@ -21,6 +21,7 @@ typedef struct
 } HallCall_t;
 
 void Dispatcher_Init(void);
+void Dispatcher_SetCommFault(boolean status);
 void Dispatcher_AddHallCall(uint8 floor, ElevatorDir_t direction);
 boolean Dispatcher_PopNextHallCall(HallCall_t *outCall);
 DispatchTarget_t Dispatcher_AssignCall(const ElevatorData_t *master,
@@ -29,5 +30,5 @@ DispatchTarget_t Dispatcher_AssignCall(const ElevatorData_t *master,
 DispatchTarget_t Dispatcher_SelectAndPop(const ElevatorData_t *master,
 										 const ElevatorData_t *slave,
 										 HallCall_t *outCall);
-
+uint8 Dispatcher_GetHallCallMask(void);
 #endif /* STM32_TEMPLATE_DISPATCHER_H */
