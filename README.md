@@ -1,36 +1,11 @@
-## Remaining Tasks
+## Remaining Tasks(in order)
 
-### 1. UART Telemetry
-- Implement non-blocking UART status reporting every 500 ms.
-- Telemetry should include:
-  - Master elevator state and current floor
-  - Slave elevator state and current floor
-  - Active hallway/cabin requests
-  - SPI communication status
+**1- Fix UART telemetry update/display issues** to correctly reflect Slave elevator states, hallway assignments, and real-time floor/status changes.
 
-### 2. SPI Communication Fault Handling
-- Detect SPI timeout or communication failure.
-- On communication fault:
-  - Master should take control of all hallway requests.
-  - Slave should switch to independent/emergency mode.
-- Add communication timeout monitoring and recovery handling.
+**2- Re-integrate and stabilize communication fault handling** to properly detect SPI failures and switch the system into the required fault behavior:
 
-### 3. SPI Reliability Improvements
-- Improve robustness of SPI frame exchange.
-- Add handling for:
-  - Invalid checksum frames
-  - Corrupted packets
-  - Missed/partial transfers
-- Ensure stable full-duplex synchronization between Master and Slave.
+  - Master handles all hallway requests.
+  
+  - Slave enters independent/emergency mode.
 
-### 4. Dispatcher Algorithm Validation
-- Test and verify all required dispatching scenarios:
-  - Immediate match
-  - Perfect directional match
-  - Passed match
-  - Opposite direction rejection
-  - Nearest idle elevator selection
-- Validate correct elevator assignment behavior under different traffic conditions.
-
-### 5. Bonus (Optional)
-- Implement DMA-based UART telemetry transmission to reduce CPU overhead during status reporting.
+**3- Perform final validation** and stress testing for SPI synchronization, hallway routing, and dual-elevator coordination under continuous button events.
