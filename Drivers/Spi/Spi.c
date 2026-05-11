@@ -104,15 +104,8 @@ void Spi1_Init(uint8 MasterSlave, uint8 ClkPol, uint8 ClkPhase)
 
   SPI1->CR1 = 0U;
 
-  /* Enable Software Slave Management */
   SPI1->CR1 |= (1U << SPI_CR1_SSM_Pos);
-
-  /* CRITICAL FIX: Master forces SSI high, Slave forces SSI low to listen to CS pin */
-  if (MasterSlave == SPI_MASTER) {
-      SPI1->CR1 |= (1U << SPI_CR1_SSI_Pos);
-  } else {
-      SPI1->CR1 &= ~(1U << SPI_CR1_SSI_Pos);
-  }
+  SPI1->CR1 |= (1U << SPI_CR1_SSI_Pos);
 
   SPI1->CR1 |= ((uint32)MasterSlave << SPI_CR1_MSTR_Pos);
   SPI1->CR1 |= ((uint32)ClkPol      << SPI_CR1_CPOL_Pos);

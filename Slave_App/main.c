@@ -21,6 +21,9 @@
 #define PWM_PSC         0U
 #define PWM_ARR         1599U
 
+#define SPI_CS_PORT GPIO_B
+#define SPI_CS_PIN  6U
+
 static volatile ElevatorData_t slaveElevator;
 static volatile boolean FsmTickFlag = FALSE;
 
@@ -107,6 +110,17 @@ static void Slave_ServiceSpi(void)
 {
     uint8 rxByte;
 
+    /* Only receive while Master CS is LOW */
+    if (Gpio_ReadPin(SPI_CS_PORT, SPI_CS_PIN) == HIGH)
+    {
+        SlaveRxIndex = 0U;
+        SlaveTxIndex = 0U;
+        Slave_PrepareTxFrame();
+        (void)Spi1_SlavePreloadByte(((uint8*)&SlaveTxFrame)[SlaveTxIndex]);
+        SlaveTxIndex++;
+        return;
+    }
+
     if (Spi1_SlaveReadByte(&rxByte) == SPI_OK)
     {
         ((uint8*)&SlaveRxFrame)[SlaveRxIndex] = rxByte;
@@ -121,7 +135,8 @@ static void Slave_ServiceSpi(void)
         if (SlaveRxIndex >= SPI_FRAME_SIZE)
         {
             SlaveControl_OnRxFrame(&SlaveRxFrame);
-            Slave_ResetSpiState();
+            SlaveRxIndex = 0U;
+            SlaveTxIndex = 0U;
         }
     }
 }
