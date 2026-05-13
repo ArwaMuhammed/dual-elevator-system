@@ -45,7 +45,7 @@ typedef enum
 #define MOTOR_DUTY_FULL     100U
 
 /* ─── Door open duration in milliseconds ───────────────────── */
-#define DOOR_OPEN_DURATION_MS   3000U
+#define DOOR_OPEN_DURATION_MS   250U
 
 /* ─── Main elevator data structure ─────────────────────────── */
 typedef struct
