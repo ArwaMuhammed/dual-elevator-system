@@ -42,6 +42,10 @@ void *_sbrk(int incr)
 #define SPI_CS_PORT     GPIO_B
 #define SPI_CS_PIN      6U
 
+#define TELEMETRY_USE_DMA   0U
+
+
+
 static uint8 TelemetryTickCounter = 0U;
 static char TelemetryBuffer[256];
 static boolean SpiCommFault = FALSE;
@@ -162,7 +166,13 @@ static void Master_SendTelemetry(void)
         LatchedHallCalls, LatchedSlaveReq,
         (SpiCommFault == TRUE) ? "FAULT (TIMEOUT)" : "OK");
 
-    Usart2_TransmitString(TelemetryBuffer);
+    #if (TELEMETRY_USE_DMA == 1U)
+        /* Bonus (hardware): Zero-CPU UART telemetry using DMA (non-blocking) */
+        Usart2_TransmitStringDMA(TelemetryBuffer);
+    #else
+        /* Simulation-safe: polling TX (still allowed for UART debug output) */
+        Usart2_TransmitString(TelemetryBuffer);
+    #endif
     LatchedHallCalls = 0U;
     LatchedSlaveReq = 0U;
 }
@@ -193,6 +203,11 @@ static void System_Init(void)
     Rcc_Enable(RCC_SPI1);
     Rcc_Enable(RCC_GPIOD);
     Rcc_Enable(RCC_USART2);
+    Rcc_Enable(RCC_DMA1);
+
+    /* Enable DMA interrupt for USART2 TX (DMA1 Stream6) */
+    NVIC_EnableIRQ(DMA1_Stream6_IRQn);
+    NVIC_SetPriority(DMA1_Stream6_IRQn, 5U);
 
     /* Start SysTick timer for exactly 1ms (Assuming 16MHz clock) */
     SysTick_Config(16000U);
@@ -271,6 +286,10 @@ static void System_Init(void)
     ElevatorFSM_Init(&slaveElevatorShadow);
     Dispatcher_Init();
     Usart2_Init();
+
+    /* Quick sanity message to confirm UART wiring in Proteus/terminal. */
+    Usart2_TransmitString("\r\nBOOT: Master started\r\n");
+
     FSM_RearmTick();
 }
 

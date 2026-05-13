@@ -53,7 +53,8 @@ void Timer_DelayMsAsync(uint8 TimerId, uint32 DelayMs, TimerCallback Callback) {
     Timer_Callbacks[index] = Callback;
 
     timer->CR1 = 0; // Stop & reset
-    timer->PSC = 15999U / 3;
+    /* With default HSI=16MHz and APB prescaler=1, set PSC so timer ticks at 1kHz (1ms). */
+    timer->PSC = 15999U;
     timer->ARR = (uint16) (DelayMs - 1);
     timer->CNT = 0;
 

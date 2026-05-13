@@ -17,4 +17,5 @@ uint8 Usart2_TransmitByte(uint8 Byte);
 uint8 Usart2_RecieveByte(void);
 void Usart2_TransmitString(const char* Str);
 void Usart2_TransmitStringDMA(const char* Str);
+
 #endif /* USART_H */
