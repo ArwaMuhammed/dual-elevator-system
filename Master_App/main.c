@@ -26,8 +26,6 @@ void *_sbrk(int incr)
 }
 
 #define NVIC_IPR_BASE   ((volatile uint8 *)0xE000E400)
-#define IRQ_EXTI0       6U
-#define IRQ_EXTI1       7U
 #define IRQ_EXTI2       8U
 #define IRQ_EXTI3       9U
 #define IRQ_EXTI4       10U
@@ -41,10 +39,7 @@ void *_sbrk(int incr)
 
 #define SPI_CS_PORT     GPIO_B
 #define SPI_CS_PIN      6U
-
 #define TELEMETRY_USE_DMA   0U
-
-
 
 static uint8 TelemetryTickCounter = 0U;
 static char TelemetryBuffer[256];
@@ -69,19 +64,13 @@ static volatile boolean SpiTransferComplete = FALSE;
 
 void SysTick_Handler(void)
 {
-    /* Runs exactly every 1 millisecond. Zero busy-waiting! */
     if (SpiMasterState == 0U) return;
 
-    if (SpiMasterState == 1U)
-    {
-        /* Step 1: Wake up Slave */
+    if (SpiMasterState == 1U) {
         Gpio_WritePin(SPI_CS_PORT, SPI_CS_PIN, LOW);
         SpiByteIndex = 0U;
         SpiMasterState = 2U;
-    }
-    else if (SpiMasterState == 2U)
-    {
-        /* Step 2: Read previous byte (if any), write next byte */
+    } else if (SpiMasterState == 2U) {
         if (SpiByteIndex > 0U) {
             ((uint8*)&RxFrameBuffer)[SpiByteIndex - 1U] = SPI1->DR;
         }
@@ -90,38 +79,21 @@ void SysTick_Handler(void)
             SPI1->DR = ((uint8*)&TxFrameBuffer)[SpiByteIndex];
             SpiByteIndex++;
         } else {
-            SpiMasterState = 3U; /* All bytes sent and read */
+            SpiMasterState = 3U;
         }
-    }
-    else if (SpiMasterState == 3U)
-    {
-        /* Step 3: End Transfer */
+    } else if (SpiMasterState == 3U) {
         Gpio_WritePin(SPI_CS_PORT, SPI_CS_PIN, HIGH);
         SpiTransferComplete = TRUE;
-        SpiMasterState = 0U; /* Return to IDLE */
+        SpiMasterState = 0U;
     }
 }
 /* ───────────────────────────────────────────────────────────────────────── */
-
-static void Sensor_TriggerIfExpected(uint8 floorIndex)
-{
-    if (masterElevator.Direction == ELEVATOR_DIR_UP) {
-        if ((masterElevator.CurrentFloor + 1U) == floorIndex) masterElevator.FloorReached = TRUE;
-    } else if (masterElevator.Direction == ELEVATOR_DIR_DOWN) {
-        if ((masterElevator.CurrentFloor > 0U) && ((masterElevator.CurrentFloor - 1U) == floorIndex))
-            masterElevator.FloorReached = TRUE;
-    }
-}
 
 static void CabinBtn_Floor1_CB(void) { ElevatorFSM_RequestFloor((ElevatorData_t*)&masterElevator, FLOOR_1); }
 static void CabinBtn_Floor2_CB(void) { ElevatorFSM_RequestFloor((ElevatorData_t*)&masterElevator, FLOOR_2); }
 static void CabinBtn_Floor3_CB(void) { ElevatorFSM_RequestFloor((ElevatorData_t*)&masterElevator, FLOOR_3); }
 static void CabinBtn_Floor4_CB(void) { ElevatorFSM_RequestFloor((ElevatorData_t*)&masterElevator, FLOOR_4); }
 
-static void Sensor_Floor1_CB(void) { Sensor_TriggerIfExpected(FLOOR_1); }
-static void Sensor_Floor2_CB(void) { Sensor_TriggerIfExpected(FLOOR_2); }
-static void Sensor_Floor3_CB(void) { Sensor_TriggerIfExpected(FLOOR_3); }
-static void Sensor_Floor4_CB(void) { Sensor_TriggerIfExpected(FLOOR_4); }
 static void Emergency_CB(void) { masterElevator.EmergencyActive = TRUE; }
 
 static void Hall_U1_CB(void) { Dispatcher_AddHallCall(FLOOR_1, ELEVATOR_DIR_UP); }
@@ -166,13 +138,7 @@ static void Master_SendTelemetry(void)
         LatchedHallCalls, LatchedSlaveReq,
         (SpiCommFault == TRUE) ? "FAULT (TIMEOUT)" : "OK");
 
-    #if (TELEMETRY_USE_DMA == 1U)
-        /* Bonus (hardware): Zero-CPU UART telemetry using DMA (non-blocking) */
-        Usart2_TransmitStringDMA(TelemetryBuffer);
-    #else
-        /* Simulation-safe: polling TX (still allowed for UART debug output) */
-        Usart2_TransmitString(TelemetryBuffer);
-    #endif
+    Usart2_TransmitString(TelemetryBuffer);
     LatchedHallCalls = 0U;
     LatchedSlaveReq = 0U;
 }
@@ -181,6 +147,7 @@ static void Master_HandleHallRequests(void)
 {
     HallCall_t call;
     DispatchTarget_t target;
+
     target = Dispatcher_SelectAndPop((ElevatorData_t*)&masterElevator, &slaveElevatorShadow, &call);
 
     if (target == DISPATCH_TARGET_MASTER) {
@@ -205,11 +172,8 @@ static void System_Init(void)
     Rcc_Enable(RCC_USART2);
     Rcc_Enable(RCC_DMA1);
 
-    /* Enable DMA interrupt for USART2 TX (DMA1 Stream6) */
     NVIC_EnableIRQ(DMA1_Stream6_IRQn);
     NVIC_SetPriority(DMA1_Stream6_IRQn, 5U);
-
-    /* Start SysTick timer for exactly 1ms (Assuming 16MHz clock) */
     SysTick_Config(16000U);
 
     Gpio_Init(GPIO_A, 10, GPIO_INPUT, GPIO_PULL_UP);
@@ -220,15 +184,6 @@ static void System_Init(void)
     Exti_Init(EXTI_LINE_11, EXTI_PORT_A, EXTI_EDGE_FALLING, CabinBtn_Floor2_CB);
     Exti_Init(EXTI_LINE_12, EXTI_PORT_A, EXTI_EDGE_FALLING, CabinBtn_Floor3_CB);
     Exti_Init(EXTI_LINE_15, EXTI_PORT_A, EXTI_EDGE_FALLING, CabinBtn_Floor4_CB);
-
-    Gpio_Init(GPIO_B, 0, GPIO_INPUT, GPIO_PULL_DOWN);
-    Gpio_Init(GPIO_B, 1, GPIO_INPUT, GPIO_PULL_DOWN);
-    Gpio_Init(GPIO_B, 8, GPIO_INPUT, GPIO_PULL_DOWN);
-    Gpio_Init(GPIO_B, 9, GPIO_INPUT, GPIO_PULL_DOWN);
-    Exti_Init(EXTI_LINE_0, EXTI_PORT_B, EXTI_EDGE_RISING, Sensor_Floor1_CB);
-    Exti_Init(EXTI_LINE_1, EXTI_PORT_B, EXTI_EDGE_RISING, Sensor_Floor2_CB);
-    Exti_Init(EXTI_LINE_8, EXTI_PORT_B, EXTI_EDGE_RISING, Sensor_Floor3_CB);
-    Exti_Init(EXTI_LINE_9, EXTI_PORT_B, EXTI_EDGE_RISING, Sensor_Floor4_CB);
 
     Gpio_Init(GPIO_C, 13, GPIO_INPUT, GPIO_PULL_UP);
     Exti_Init(EXTI_LINE_13, EXTI_PORT_C, EXTI_EDGE_FALLING, Emergency_CB);
@@ -256,8 +211,6 @@ static void System_Init(void)
     Gpio_WritePin(SPI_CS_PORT, SPI_CS_PIN, HIGH);
     Spi1_Init(SPI_MASTER, SPI_IDLE_LOW, SPI_SAMPLE_FIRST_TRANSITION);
 
-    SetIrqPriority(IRQ_EXTI0,      2U);
-    SetIrqPriority(IRQ_EXTI1,      2U);
     SetIrqPriority(IRQ_EXTI2,      2U);
     SetIrqPriority(IRQ_EXTI3,      2U);
     SetIrqPriority(IRQ_EXTI4,      2U);
@@ -266,16 +219,12 @@ static void System_Init(void)
     SetIrqPriority(IRQ_TIM3,       3U);
     SetIrqPriority(IRQ_TIM4,       3U);
 
-    Exti_Enable(EXTI_LINE_0);
-    Exti_Enable(EXTI_LINE_1);
     Exti_Enable(EXTI_LINE_2);
     Exti_Enable(EXTI_LINE_3);
     Exti_Enable(EXTI_LINE_4);
     Exti_Enable(EXTI_LINE_5);
     Exti_Enable(EXTI_LINE_6);
     Exti_Enable(EXTI_LINE_7);
-    Exti_Enable(EXTI_LINE_8);
-    Exti_Enable(EXTI_LINE_9);
     Exti_Enable(EXTI_LINE_10);
     Exti_Enable(EXTI_LINE_11);
     Exti_Enable(EXTI_LINE_12);
@@ -287,7 +236,9 @@ static void System_Init(void)
     Dispatcher_Init();
     Usart2_Init();
 
-    /* Quick sanity message to confirm UART wiring in Proteus/terminal. */
+    /* Safety Delay for Proteus Terminal to catch up */
+    for(volatile uint32 i=0; i<100000; i++);
+
     Usart2_TransmitString("\r\nBOOT: Master started\r\n");
 
     FSM_RearmTick();
@@ -299,24 +250,18 @@ int main(void)
 
     while (1)
     {
-        /* NON-BLOCKING: Process the SPI Frame instantly when SysTick finishes */
         if (SpiTransferComplete == TRUE)
         {
-            /* 1. Enter Critical Section */
             __asm volatile ("CPSID I");
             SpiTransferComplete = FALSE;
-
-            /* RUBRIC REQUIREMENT: Protect RX Buffer while processing */
             boolean isValid = SpiFrame_IsValid(&RxFrameBuffer);
-
-            /* 2. Exit Critical Section */
             __asm volatile ("CPSIE I");
 
             if (isValid == TRUE) {
                 SpiCommFault = FALSE;
                 Dispatcher_SetCommFault(FALSE);
                 Master_UpdateSlaveShadowFromFrame(&RxFrameBuffer);
-                PendingSlaveRequestsMask = 0U; /* Clear sent requests */
+                PendingSlaveRequestsMask = 0U;
             } else {
                 SpiCommFault = TRUE;
                 Dispatcher_SetCommFault(TRUE);
@@ -335,7 +280,6 @@ int main(void)
             ElevatorFSM_Tick((ElevatorData_t*)&masterElevator);
             Master_HandleHallRequests();
 
-            /* Kick off the Non-Blocking SPI State Machine every 50ms */
             SpiTickCounter++;
             if (SpiTickCounter >= 5U)
             {
@@ -346,12 +290,11 @@ int main(void)
                     if (masterElevator.EmergencyActive == TRUE) flags |= SPI_FLAG_EMERGENCY;
                     if (masterElevator.State == ELEVATOR_STATE_DOORS_OPEN) flags |= SPI_FLAG_DOORS_OPEN;
 
-                    /* RUBRIC REQUIREMENT: Protect TX Buffer creation */
                     __asm volatile ("CPSID I");
                     SpiFrame_Build((ElevatorData_t*)&masterElevator, PendingSlaveRequestsMask, flags, speed, &TxFrameBuffer);
                     __asm volatile ("CPSIE I");
 
-                    SpiMasterState = 1U; /* Triggers the SysTick Handler */
+                    SpiMasterState = 1U;
                 }
             }
 
@@ -364,7 +307,11 @@ int main(void)
 
             FSM_RearmTick();
         }
-        __asm volatile ("WFI");
+
+        /* * WFI (Wait For Interrupt) IS REMOVED HERE!
+         * Proteus sometimes freezes when WFI is used without hardware timers.
+         * The loop will now just poll safely.
+         */
     }
     return 0;
 }

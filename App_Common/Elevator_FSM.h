@@ -11,6 +11,8 @@
 #define ELEVATOR_FSM_H
 
 #include "Elevator_Types.h"
+#define MOTOR_TIMER_ID   TIMER2
+#define MOTOR_CHANNEL    PWM_CHANNEL_1
 
 /**
  * @brief  Initialise the elevator data structure to a known safe state.
