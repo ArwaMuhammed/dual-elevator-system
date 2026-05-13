@@ -72,8 +72,9 @@ void Usart2_Init(void) {
     USART2->CR1 &= ~(1 << USART_CR1_OVER8_Pos); // 16 over sampling
 
     /* Assuming 16MHz clock on APB1, same as APB2, keeping the same BRR */
-    USART2->BRR = 0x683; // Baud Rate 9600
-
+    // Baud Rate 9600
+    // USART2->BRR = 0x683;
+    USART2->BRR = 0x08B;
     /* Enable Transmission block */
     USART2->CR1 |= (1 << USART_CR1_TE_Pos);
     /* Enable Receive block */

@@ -356,7 +356,7 @@ int main(void)
             }
 
             TelemetryTickCounter++;
-            if (TelemetryTickCounter >= 50U)
+            if (TelemetryTickCounter >= 25U)
             {
                 TelemetryTickCounter = 0U;
                 Master_SendTelemetry();

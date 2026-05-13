@@ -1,9 +1,4 @@
-/**
- * Timer.c
- *
- *  Created on: 4/12/2026
- *  Author    : AbdallahDarwish
- */
+
 
 #include "Timer.h"
 #include "Timer_Private.h"
