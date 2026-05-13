@@ -42,7 +42,13 @@ void *_sbrk(int incr)
 #define TELEMETRY_USE_DMA   0U
 
 static uint8 TelemetryTickCounter = 0U;
-static char TelemetryBuffer[256];
+
+/* ====================================================
+   BUG FIXED HERE: Increased buffer size to 512 to
+   prevent memory overflow into the elevator struct!
+   ==================================================== */
+static char TelemetryBuffer[512];
+
 static boolean SpiCommFault = FALSE;
 
 static uint8 LatchedHallCalls = 0U;
@@ -124,21 +130,41 @@ static void Master_UpdateSlaveShadowFromFrame(const SpiFrame_t *frame)
     }
 }
 
+/* ── Helper function using your exact enum state names ── */
+static const char* GetStateName(ElevatorState_t state) {
+    switch(state) {
+        case ELEVATOR_STATE_IDLE:         return "IDLE";
+        case ELEVATOR_STATE_MOVING_UP:    return "MOVING UP";
+        case ELEVATOR_STATE_MOVING_DOWN:  return "MOVING DOWN";
+        case ELEVATOR_STATE_DOORS_OPEN:   return "DOORS OPEN";
+        case ELEVATOR_STATE_EMERGENCY:    return "EMERGENCY!";
+        default:                          return "UNKNOWN";
+    }
+}
+
+/* ── Upgraded Telemetry Function ── */
 static void Master_SendTelemetry(void)
 {
     sprintf(TelemetryBuffer,
-        "\r\n--- ELEVATOR TELEMETRY ---\r\n"
-        "Master : State = %d | Floor = %d \r\n"
-        "Slave  : State = %d | Floor = %d \r\n"
-        "System : HallCalls = 0x%02X | SlavePendReq = 0x%02X\r\n"
-        "SPI IPC: %s\r\n"
-        "--------------------------\r\n",
-        masterElevator.State, masterElevator.CurrentFloor,
-        slaveElevatorShadow.State, slaveElevatorShadow.CurrentFloor,
-        LatchedHallCalls, LatchedSlaveReq,
-        (SpiCommFault == TRUE) ? "FAULT (TIMEOUT)" : "OK");
+        "\r\n================ ELEVATOR TELEMETRY ================\r\n"
+        "MASTER | State: %s \t| Current: F%d \t| Target: F%d\r\n"
+        "SLAVE  | State: %s \t| Current: F%d \t| \r\n"
+        "SYSTEM | Hall Calls: 0x%02X \t| Pend: 0x%02X \t| SPI: %s\r\n"
+        "====================================================\r\n",
+
+        GetStateName(masterElevator.State),
+        (masterElevator.CurrentFloor + 1U),
+        (masterElevator.TargetFloor + 1U),
+
+        GetStateName(slaveElevatorShadow.State),
+        (slaveElevatorShadow.CurrentFloor + 1U),
+
+        LatchedHallCalls,
+        LatchedSlaveReq,
+        (SpiCommFault == TRUE) ? "FAULT (DISCONNECTED)" : "ONLINE");
 
     Usart2_TransmitString(TelemetryBuffer);
+
     LatchedHallCalls = 0U;
     LatchedSlaveReq = 0U;
 }
@@ -307,11 +333,6 @@ int main(void)
 
             FSM_RearmTick();
         }
-
-        /* * WFI (Wait For Interrupt) IS REMOVED HERE!
-         * Proteus sometimes freezes when WFI is used without hardware timers.
-         * The loop will now just poll safely.
-         */
     }
     return 0;
 }

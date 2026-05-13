@@ -8,14 +8,14 @@
 #include "Elevator_FSM.h"
 #include "Pwm.h"
 #include "Std_Types.h"
-#include "Timer.h"
+#include "Timer.h"      /* Fixed: Added Timer.h for TIMER2 definition */
 
 /* ── Motor PWM config ───────────────────────────────────────── */
 #define MOTOR_TIMER_ID   TIMER2
 #define MOTOR_CHANNEL    PWM_CHANNEL_1
 
 /* ── Software Timers Config (Based on 10ms FSM Tick) ────────── */
-#define FLOOR_TRAVEL_TICKS  20U  /* 200 * 10ms = 2 seconds to travel 1 floor */
+#define FLOOR_TRAVEL_TICKS  50U  /* 200 * 10ms = 2 seconds to travel 1 floor */
 #define DOOR_OPEN_TICKS     30U  /* 300 * 10ms = 3 seconds door open time */
 
 /* ── Private Variables for Software Counting ────────────────── */
@@ -63,9 +63,6 @@ void ElevatorFSM_Tick(ElevatorData_t *elevator)
 
     switch (elevator->State)
     {
-        /* ════════════════════════════════════════════
-         * IDLE — wait for any cabin request
-         * ════════════════════════════════════════════ */
         case ELEVATOR_STATE_IDLE:
         {
             if (FSM_HasAnyRequest(elevator) == TRUE)
@@ -78,14 +75,14 @@ void ElevatorFSM_Tick(ElevatorData_t *elevator)
                     elevator->State     = ELEVATOR_STATE_MOVING_UP;
                     elevator->Direction = ELEVATOR_DIR_UP;
                     FSM_SetMotorSpeed(MOTOR_DUTY_FULL);
-                    FSM_TravelTicksRemaining = FLOOR_TRAVEL_TICKS; /* Start travel countdown! */
+                    FSM_TravelTicksRemaining = FLOOR_TRAVEL_TICKS;
                 }
                 else if (next < elevator->CurrentFloor)
                 {
                     elevator->State     = ELEVATOR_STATE_MOVING_DOWN;
                     elevator->Direction = ELEVATOR_DIR_DOWN;
                     FSM_SetMotorSpeed(MOTOR_DUTY_FULL);
-                    FSM_TravelTicksRemaining = FLOOR_TRAVEL_TICKS; /* Start travel countdown! */
+                    FSM_TravelTicksRemaining = FLOOR_TRAVEL_TICKS;
                 }
                 else
                 {
@@ -93,26 +90,21 @@ void ElevatorFSM_Tick(ElevatorData_t *elevator)
                     elevator->State               = ELEVATOR_STATE_DOORS_OPEN;
                     elevator->Direction           = ELEVATOR_DIR_NONE;
                     FSM_SetMotorSpeed(MOTOR_DUTY_STOP);
-                    FSM_DoorTicksRemaining        = DOOR_OPEN_TICKS; /* Start door countdown */
+                    FSM_DoorTicksRemaining        = DOOR_OPEN_TICKS;
                 }
             }
             break;
         }
 
-        /* ════════════════════════════════════════════
-         * MOVING_UP — countdown ticks to reach floor
-         * ════════════════════════════════════════════ */
         case ELEVATOR_STATE_MOVING_UP:
         {
-            /* 1. Decrement the virtual sensor timer every 10ms */
             if (FSM_TravelTicksRemaining > 0U) {
                 FSM_TravelTicksRemaining--;
                 if (FSM_TravelTicksRemaining == 0U) {
-                    elevator->FloorReached = TRUE; /* 2 seconds have passed! */
+                    elevator->FloorReached = TRUE;
                 }
             }
 
-            /* 2. Check if we arrived */
             if (elevator->FloorReached == TRUE)
             {
                 __asm volatile ("CPSID I");
@@ -127,28 +119,22 @@ void ElevatorFSM_Tick(ElevatorData_t *elevator)
 
                 if (elevator->CurrentFloor == elevator->TargetFloor)
                 {
-                    /* Reached target! Open doors. */
                     elevator->CabinRequests[elevator->CurrentFloor] = FALSE;
                     elevator->State     = ELEVATOR_STATE_DOORS_OPEN;
                     elevator->Direction = ELEVATOR_DIR_NONE;
                     FSM_SetMotorSpeed(MOTOR_DUTY_STOP);
-                    FSM_DoorTicksRemaining = DOOR_OPEN_TICKS; /* Start door timer */
+                    FSM_DoorTicksRemaining = DOOR_OPEN_TICKS;
                 }
                 else
                 {
-                    /* Passing a floor, need to keep going. Reset the timer! */
                     FSM_TravelTicksRemaining = FLOOR_TRAVEL_TICKS;
                 }
             }
             break;
         }
 
-        /* ════════════════════════════════════════════
-         * MOVING_DOWN — countdown ticks to reach floor
-         * ════════════════════════════════════════════ */
         case ELEVATOR_STATE_MOVING_DOWN:
         {
-            /* 1. Decrement the virtual sensor timer every 10ms */
             if (FSM_TravelTicksRemaining > 0U) {
                 FSM_TravelTicksRemaining--;
                 if (FSM_TravelTicksRemaining == 0U) {
@@ -156,7 +142,6 @@ void ElevatorFSM_Tick(ElevatorData_t *elevator)
                 }
             }
 
-            /* 2. Check if we arrived */
             if (elevator->FloorReached == TRUE)
             {
                 __asm volatile ("CPSID I");
@@ -171,7 +156,6 @@ void ElevatorFSM_Tick(ElevatorData_t *elevator)
 
                 if (elevator->CurrentFloor == elevator->TargetFloor)
                 {
-                    /* Reached target! Open doors. */
                     elevator->CabinRequests[elevator->CurrentFloor] = FALSE;
                     elevator->State     = ELEVATOR_STATE_DOORS_OPEN;
                     elevator->Direction = ELEVATOR_DIR_NONE;
@@ -180,16 +164,12 @@ void ElevatorFSM_Tick(ElevatorData_t *elevator)
                 }
                 else
                 {
-                    /* Passing a floor, need to keep going. Reset the timer! */
                     FSM_TravelTicksRemaining = FLOOR_TRAVEL_TICKS;
                 }
             }
             break;
         }
 
-        /* ════════════════════════════════════════════
-         * DOORS_OPEN — countdown ticks to close doors
-         * ════════════════════════════════════════════ */
         case ELEVATOR_STATE_DOORS_OPEN:
         {
             if (FSM_DoorTicksRemaining > 0U) {
@@ -295,7 +275,6 @@ static uint8 FSM_FindNextFloor(ElevatorData_t *elevator)
         }
     }
     else {
-        /* IDLE — pick the closest floor by distance */
         for (i = 0U; i < ELEVATOR_NUM_FLOORS; i++) {
             if (elevator->CabinRequests[i] == TRUE) {
                 dist = (i > elevator->CurrentFloor) ? (i - elevator->CurrentFloor) : (elevator->CurrentFloor - i);
