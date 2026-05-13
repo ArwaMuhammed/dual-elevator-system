@@ -42,11 +42,6 @@ void *_sbrk(int incr)
 #define TELEMETRY_USE_DMA   0U
 
 static uint8 TelemetryTickCounter = 0U;
-
-/* ====================================================
-   BUG FIXED HERE: Increased buffer size to 512 to
-   prevent memory overflow into the elevator struct!
-   ==================================================== */
 static char TelemetryBuffer[512];
 
 static boolean SpiCommFault = FALSE;
@@ -127,6 +122,10 @@ static void Master_UpdateSlaveShadowFromFrame(const SpiFrame_t *frame)
         slaveElevatorShadow.CurrentFloor = frame->CurrentFloor;
         slaveElevatorShadow.Direction    = (ElevatorDir_t)frame->Direction;
         slaveElevatorShadow.EmergencyActive = ((frame->Flags & SPI_FLAG_EMERGENCY) != 0U) ? TRUE : FALSE;
+
+        /* NOTE: If you add TargetFloor to the SPI Frame struct, uncomment the line below! */
+        // /* slaveElevatorShadow.TargetFloor = frame->TargetFloor; */
+        slaveElevatorShadow.TargetFloor = frame->TargetFloor;
     }
 }
 
@@ -148,7 +147,7 @@ static void Master_SendTelemetry(void)
     sprintf(TelemetryBuffer,
         "\r\n================ ELEVATOR TELEMETRY ================\r\n"
         "MASTER | State: %s \t| Current: F%d \t| Target: F%d\r\n"
-        "SLAVE  | State: %s \t| Current: F%d \t| \r\n"
+        "SLAVE  | State: %s \t| Current: F%d \t| Target: F%d\r\n" /* <-- Added Slave Target here */
         "SYSTEM | Hall Calls: 0x%02X \t| Pend: 0x%02X \t| SPI: %s\r\n"
         "====================================================\r\n",
 
@@ -158,6 +157,8 @@ static void Master_SendTelemetry(void)
 
         GetStateName(slaveElevatorShadow.State),
         (slaveElevatorShadow.CurrentFloor + 1U),
+        (slaveElevatorShadow.TargetFloor + 1U), /* <-- Added the variable here */
+
 
         LatchedHallCalls,
         LatchedSlaveReq,

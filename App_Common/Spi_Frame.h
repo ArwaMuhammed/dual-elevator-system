@@ -4,7 +4,8 @@
 #include "Std_Types.h"
 #include "Elevator_Types.h"
 
-#define SPI_FRAME_SIZE      8U
+/* We increased the size to 9 bytes to fit the TargetFloor! */
+#define SPI_FRAME_SIZE      9U
 #define SPI_FRAME_HEADER    0xA5U
 
 #define SPI_FLAG_EMERGENCY   0x01U
@@ -16,6 +17,7 @@ typedef struct
     uint8 Header;
     uint8 State;
     uint8 CurrentFloor;
+    uint8 TargetFloor;    /* <-- Added Target Floor here! */
     uint8 Direction;
     uint8 Requests;
     uint8 Flags;

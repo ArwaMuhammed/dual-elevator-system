@@ -15,7 +15,7 @@
 #define MOTOR_CHANNEL    PWM_CHANNEL_1
 
 /* ── Software Timers Config (Based on 10ms FSM Tick) ────────── */
-#define FLOOR_TRAVEL_TICKS  50U  /* 200 * 10ms = 2 seconds to travel 1 floor */
+#define FLOOR_TRAVEL_TICKS  26U  /* 200 * 10ms = 2 seconds to travel 1 floor */
 #define DOOR_OPEN_TICKS     30U  /* 300 * 10ms = 3 seconds door open time */
 
 /* ── Private Variables for Software Counting ────────────────── */

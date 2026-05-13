@@ -140,7 +140,7 @@ int main(void)
             __asm volatile ("CPSIE I");
 
             SpiTimeoutCounter++;
-            if (SpiTimeoutCounter >= 20U) {
+            if (SpiTimeoutCounter >= 30U) {
                 SlaveControl_SetIndependent(TRUE);
             } else {
                 SlaveControl_SetIndependent(FALSE);

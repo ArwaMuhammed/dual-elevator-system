@@ -7,6 +7,7 @@ uint8 SpiFrame_CalculateChecksum(const SpiFrame_t *frame)
     sum ^= frame->Header;
     sum ^= frame->State;
     sum ^= frame->CurrentFloor;
+    sum ^= frame->TargetFloor;  /* <-- Added to Checksum calculations */
     sum ^= frame->Direction;
     sum ^= frame->Requests;
     sum ^= frame->Flags;
@@ -55,6 +56,7 @@ void SpiFrame_Build(const ElevatorData_t *elevator,
     frame->Header       = SPI_FRAME_HEADER;
     frame->State        = (uint8)elevator->State;
     frame->CurrentFloor = elevator->CurrentFloor;
+    frame->TargetFloor  = elevator->TargetFloor;  /* <-- Added inside the builder! */
     frame->Direction    = (uint8)elevator->Direction;
     frame->Requests     = requestsMask;
     frame->Flags        = flags;
