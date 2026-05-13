@@ -1,9 +1,3 @@
-/**
- * Timer.h
- *
- *  Created on: 4/12/2026
- *  Author    : AbdallahDarwish
- */
 
 #ifndef TIMER_H
 #define TIMER_H

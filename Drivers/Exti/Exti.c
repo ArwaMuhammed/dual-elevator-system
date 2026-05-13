@@ -1,9 +1,3 @@
-/**
- * Exti.c
- *
- *  Created on: 5/16/2025
- *  Author    : AbdallahDarwish
- */
 #include "Exti.h"
 #include "Std_Types.h"
 

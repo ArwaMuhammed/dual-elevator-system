@@ -1,6 +1,3 @@
-//
-// Created by AbdallahDarwish on 2026-03-19.
-//
 
 #ifndef UTILS_H
 #define UTILS_H

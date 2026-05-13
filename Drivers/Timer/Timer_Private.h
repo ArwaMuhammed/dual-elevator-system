@@ -1,9 +1,3 @@
-/**
- * Timer_Private.h
- *
- *  Created on: 4/12/2026
- *  Author    : AbdallahDarwish
- */
 
 #ifndef TIMER_PRIVATE_H
 #define TIMER_PRIVATE_H

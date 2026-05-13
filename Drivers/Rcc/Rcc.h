@@ -1,10 +1,3 @@
-/**
- * Rcc.h
- *
- *  Created on: Sun Mar 26 2023
- *  Author    : Abdullah Darwish
- */
-
 #ifndef RCC_H
 #define RCC_H
 #include "Std_Types.h"

@@ -1,9 +1,4 @@
-/**
- * Bit_Operations.h
- *
- *  Created on: Sun Mar 26 2023
- *  Author    : Abdullah Darwish
- */
+
 #ifndef BIT_OPERATIONS_H
 #define BIT_OPERATIONS_H
 

@@ -1,10 +1,3 @@
-/**
- * Rcc_Private.h
- *
- *  Created on: Sun Mar 26 2023
- *  Author    : Abdullah Darwish
- */
-
 #ifndef RCC_PRIVATE_H
 #define RCC_PRIVATE_H
 #include "Std_Types.h"

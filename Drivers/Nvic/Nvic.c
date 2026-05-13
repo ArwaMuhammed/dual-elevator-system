@@ -1,11 +1,4 @@
-﻿/**
- * Nvic.c
- *
- * Created on: 2026-04-12
- * Author    : AbdallahDarwish
- */
-
-#include "Nvic.h"
+﻿#include "Nvic.h"
 
 typedef struct {
     volatile uint32 NVIC_ISER[8];

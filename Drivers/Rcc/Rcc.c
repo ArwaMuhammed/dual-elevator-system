@@ -1,10 +1,3 @@
-/**
- * Rcc.c
- *
- *  Created on: Sun Mar 26 2023
- *  Author    : Abdullah Darwish
- */
-
 #include "Rcc.h"
 
 #include "Bit_Operations.h"

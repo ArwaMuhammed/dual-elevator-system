@@ -1,9 +1,3 @@
-/**
-* Dma.c
- *
- * Generic DMA HAL Driver
- */
-
 #include "Dma.h"
 
 void Dma_Init(void) {

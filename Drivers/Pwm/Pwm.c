@@ -1,10 +1,3 @@
-/**
- * Pwm.c
- *
- *  Created on: 4/12/2026
- *  Author    : AbdallahDarwish
- */
-
 #include "Pwm.h"
 #include "Timer_Private.h"   /* TimerType struct + base addresses */
 #include "Bit_Operations.h"

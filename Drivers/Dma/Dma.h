@@ -1,6 +1,4 @@
-//
-// Created by hp on 09/05/2026.
-//
+
 
 #ifndef STM32_TEMPLATE_DMA_H
 #define STM32_TEMPLATE_DMA_H

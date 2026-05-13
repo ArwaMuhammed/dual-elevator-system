@@ -1,6 +1,3 @@
-//
-// Created by hp on 5/3/2026.
-//
 
 #ifndef STM32_TEMPLATE_DISPATCHER_H
 #define STM32_TEMPLATE_DISPATCHER_H

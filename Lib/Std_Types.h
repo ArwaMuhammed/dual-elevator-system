@@ -1,9 +1,4 @@
-/**
- * Std_Types.h
- *
- *  Created on: Sun Mar 26 2023
- *  Author    : Abdullah Darwish
- */
+
 #ifndef STD_TYPES_H
 #define STD_TYPES_H
 

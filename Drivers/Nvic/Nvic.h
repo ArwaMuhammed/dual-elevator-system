@@ -1,11 +1,4 @@
-﻿/**
- * Nvic.h
- *
- * Created on: 2026-04-12
- * Author    : AbdallahDarwish
- */
-
-#ifndef NVIC_H
+﻿#ifndef NVIC_H
 #define NVIC_H
 #include "Std_Types.h"
 
