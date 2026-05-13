@@ -44,8 +44,12 @@ typedef enum
 #define MOTOR_DUTY_SLOW     20U
 #define MOTOR_DUTY_FULL     100U
 
-/* ─── Door open duration in milliseconds ───────────────────── */
-#define DOOR_OPEN_DURATION_MS   25U
+
+
+/* ── Software Timers Config (Based on 10ms FSM Tick) ────────── */
+#define FLOOR_TRAVEL_TICKS  26U  /* 200 * 10ms = 2 seconds to travel 1 floor */
+#define DOOR_OPEN_TICKS     30U  /* 300 * 10ms = 3 seconds door open time */
+
 
 /* ─── Main elevator data structure ─────────────────────────── */
 typedef struct

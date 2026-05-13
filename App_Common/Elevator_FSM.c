@@ -8,15 +8,12 @@
 #include "Elevator_FSM.h"
 #include "Pwm.h"
 #include "Std_Types.h"
-#include "Timer.h"      /* Fixed: Added Timer.h for TIMER2 definition */
+#include "Timer.h"
 
 /* ── Motor PWM config ───────────────────────────────────────── */
 #define MOTOR_TIMER_ID   TIMER2
 #define MOTOR_CHANNEL    PWM_CHANNEL_1
 
-/* ── Software Timers Config (Based on 10ms FSM Tick) ────────── */
-#define FLOOR_TRAVEL_TICKS  26U  /* 200 * 10ms = 2 seconds to travel 1 floor */
-#define DOOR_OPEN_TICKS     30U  /* 300 * 10ms = 3 seconds door open time */
 
 /* ── Private Variables for Software Counting ────────────────── */
 static uint16 FSM_TravelTicksRemaining = 0U;
