@@ -46,6 +46,33 @@ Details    | 0xA5 | FSM   | 0..3  | U/D  | 4-bit req | misc  | 0..100 | XOR
 - SPEED: duty-cycle based speed (0..100)
 - CHK: XOR checksum of bytes 0..6
 
+## SPI1 Electrical/Timing Configuration
+
+### SPI Mode (CPOL/CPHA)
+Configured as **SPI Mode 0**:
+- **CPOL = 0** → clock idle LOW
+- **CPHA = 0** → sample on the first transition (rising edge)
+
+### Bit Order
+Data is **MSB-first** (LSBFIRST = 0, default).
+
+### SPI Clock (BR prescaler)
+In `Spi1_Init()` the BR field is set to `0b011` (BR = 3).
+
+SPI prescaler table (STM32F4):
+- BR=000 → /2
+- BR=001 → /4
+- BR=010 → /8
+- **BR=011 → /16**
+- BR=100 → /32
+- BR=101 → /64
+- BR=110 → /128
+- BR=111 → /256
+
+Assuming `PCLK2 = 16 MHz` (default clocking used by this project):
+
+`f_SCK = PCLK2 / 16 = 1 MHz`
+
 ## Port & Pin Mapping (Per Peripheral)
 
 ### Master MCU (Board A)
@@ -62,11 +89,11 @@ Details    | 0xA5 | FSM   | 0..3  | U/D  | 4-bit req | misc  | 0..100 | XOR
 - GPIOC:
   - PC13: emergency stop (EXTI line 13)
   - PC2/PC3/PC4/PC5/PC6/PC7: hallway calls (EXTI lines 2..7)
-- GPIOD:
-  - PD5: USART2_TX (AF7)
-  - PD6: USART2_RX (AF7)
+- GPIOA:
+  - PA2: USART2_TX (AF7)
+  - PA3: USART2_RX (AF7)
 - SPI1: master mode, software NSS on PB6
-- USART2: 9600 baud, telemetry TX via DMA1 Stream6 Channel4
+- USART2: **115200 baud (8N1)**, telemetry TX via DMA1 Stream6 Channel4 (bonus path)
 
 ### Slave MCU (Board B)
 - RCC: enables GPIOA/GPIOB/GPIOC, SYSCFG, TIM2/TIM3/TIM4, SPI1

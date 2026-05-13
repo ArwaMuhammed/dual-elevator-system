@@ -12,7 +12,7 @@
 #define SPI_FLAG_DOORS_OPEN  0x02U
 #define SPI_FLAG_COMM_FAULT  0x04U
 
-typedef struct
+typedef struct __attribute__((packed))
 {
     uint8 Header;
     uint8 State;

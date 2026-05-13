@@ -37,7 +37,7 @@ void Spi1_Init(uint8 MasterSlave, uint8 ClkPol, uint8 ClkPhase)
     }
 
     SPI1->CR1 &= ~(1U << SPI_CR1_MSTR_Pos);
-    SPI1->CR1 |= ((uint32)MasterSlave << SPI_CR1_MSTR_Pos);
+    SPI1->CR1 |= ((uint32)MasterSlave << SPI_CR1_MSTR_Pos); //master selection
 
     SPI1->CR1 &= ~(1U << SPI_CR1_CPOL_Pos);
     SPI1->CR1 |= ((uint32)ClkPol      << SPI_CR1_CPOL_Pos);
@@ -46,7 +46,7 @@ void Spi1_Init(uint8 MasterSlave, uint8 ClkPol, uint8 ClkPhase)
     SPI1->CR1 |= ((uint32)ClkPhase    << SPI_CR1_CPHA_Pos);
 
     SPI1->CR1 &= ~(0x7U << SPI_CR1_BR_Pos);
-    SPI1->CR1 |=  (0x3U << SPI_CR1_BR_Pos);
+    SPI1->CR1 |=  (0x3U << SPI_CR1_BR_Pos);// fclk / 16 = 1 Mhz
 
     SPI1->CR1 |= (1U << SPI_CR1_SPE_Pos);
 }
