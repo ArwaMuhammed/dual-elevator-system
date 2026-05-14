@@ -119,13 +119,19 @@ static void Master_UpdateSlaveShadowFromFrame(const SpiFrame_t *frame)
 {
     if (SpiFrame_IsValid(frame) == TRUE) {
         slaveElevatorShadow.State        = (ElevatorState_t)frame->State;
-        slaveElevatorShadow.CurrentFloor = frame->CurrentFloor;
+        // slaveElevatorShadow.CurrentFloor = frame->CurrentFloor;
+        // slaveElevatorShadow.Direction    = (ElevatorDir_t)frame->Direction;
+        // slaveElevatorShadow.EmergencyActive = ((frame->Flags & SPI_FLAG_EMERGENCY) != 0U) ? TRUE : FALSE;
+        //
+        // /* NOTE: If you add TargetFloor to the SPI Frame struct, uncomment the line below! */
+        // // /* slaveElevatorShadow.TargetFloor = frame->TargetFloor; */
+        // slaveElevatorShadow.TargetFloor = frame->TargetFloor;
+
+        slaveElevatorShadow.CurrentFloor = frame->FloorsData & 0x0F;
+        slaveElevatorShadow.TargetFloor  = (frame->FloorsData >> 4) & 0x0F;
+
         slaveElevatorShadow.Direction    = (ElevatorDir_t)frame->Direction;
         slaveElevatorShadow.EmergencyActive = ((frame->Flags & SPI_FLAG_EMERGENCY) != 0U) ? TRUE : FALSE;
-
-        /* NOTE: If you add TargetFloor to the SPI Frame struct, uncomment the line below! */
-        // /* slaveElevatorShadow.TargetFloor = frame->TargetFloor; */
-        slaveElevatorShadow.TargetFloor = frame->TargetFloor;
     }
 }
 
