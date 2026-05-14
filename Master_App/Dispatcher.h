@@ -11,6 +11,16 @@ typedef enum
 	DISPATCH_TARGET_NONE   = 2U
 } DispatchTarget_t;
 
+typedef enum
+{
+	DISPATCH_CLASS_IMMEDIATE = 0,
+	DISPATCH_CLASS_PERFECT   = 1,
+	DISPATCH_CLASS_PASSED    = 2,
+	DISPATCH_CLASS_IDLE      = 3,
+	DISPATCH_CLASS_OPPOSITE  = 4,
+	DISPATCH_CLASS_UNAVAIL   = 5
+} DispatchClass_t;
+
 typedef struct
 {
 	uint8 Floor;

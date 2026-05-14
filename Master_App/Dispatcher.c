@@ -80,15 +80,7 @@ boolean Dispatcher_PopNextHallCall(HallCall_t *outCall)
     return FALSE;
 }
 
-typedef enum
-{
-    DISPATCH_CLASS_IMMEDIATE = 0,
-    DISPATCH_CLASS_PERFECT   = 1,
-    DISPATCH_CLASS_PASSED    = 2,
-    DISPATCH_CLASS_IDLE      = 3,
-    DISPATCH_CLASS_OPPOSITE  = 4,
-    DISPATCH_CLASS_UNAVAIL   = 5
-} DispatchClass_t;
+
 
 static DispatchClass_t Dispatcher_Classify(const ElevatorData_t *elevator, uint8 callFloor, ElevatorDir_t callDir, uint8 *distance)
 {

@@ -1,18 +1,9 @@
-/**
- * Elevator_FSM.c
- *
- * Elevator Finite State Machine using Software Timers.
- * No extra hardware timers needed!
- */
-
 #include "Elevator_FSM.h"
 #include "Pwm.h"
 #include "Std_Types.h"
 #include "Timer.h"
+#include "critical.h"
 
-/* ── Motor PWM config ───────────────────────────────────────── */
-#define MOTOR_TIMER_ID   TIMER2
-#define MOTOR_CHANNEL    PWM_CHANNEL_1
 
 
 /* ── Private Variables for Software Counting ────────────────── */
@@ -47,186 +38,6 @@ void ElevatorFSM_Init(ElevatorData_t *elevator)
     FSM_SetMotorSpeed(MOTOR_DUTY_STOP);
 }
 
-// void ElevatorFSM_Tick(ElevatorData_t *elevator)
-// {
-//     /* ── EMERGENCY overrides every state ── */
-//     if (elevator->EmergencyActive == TRUE)
-//     {
-//         elevator->State     = ELEVATOR_STATE_EMERGENCY;
-//         elevator->Direction = ELEVATOR_DIR_NONE;
-//         FSM_SetMotorSpeed(MOTOR_DUTY_STOP);
-//         return;
-//     }
-//
-//     switch (elevator->State)
-//     {
-//         case ELEVATOR_STATE_IDLE:
-//         {
-//             if (FSM_HasAnyRequest(elevator) == TRUE)
-//             {
-//                 uint8 next = FSM_FindNextFloor(elevator);
-//                 elevator->TargetFloor = next;
-//
-//                 if (next > elevator->CurrentFloor)
-//                 {
-//                     elevator->State     = ELEVATOR_STATE_MOVING_UP;
-//                     elevator->Direction = ELEVATOR_DIR_UP;
-//                     FSM_SetMotorSpeed(MOTOR_DUTY_FULL);
-//                     FSM_TravelTicksRemaining = FLOOR_TRAVEL_TICKS;
-//                 }
-//                 else if (next < elevator->CurrentFloor)
-//                 {
-//                     elevator->State     = ELEVATOR_STATE_MOVING_DOWN;
-//                     elevator->Direction = ELEVATOR_DIR_DOWN;
-//                     FSM_SetMotorSpeed(MOTOR_DUTY_FULL);
-//                     FSM_TravelTicksRemaining = FLOOR_TRAVEL_TICKS;
-//                 }
-//                 else
-//                 {
-//                     elevator->CabinRequests[next] = FALSE;
-//                     elevator->State               = ELEVATOR_STATE_DOORS_OPEN;
-//                     elevator->Direction           = ELEVATOR_DIR_NONE;
-//                     FSM_SetMotorSpeed(MOTOR_DUTY_STOP);
-//                     FSM_DoorTicksRemaining        = DOOR_OPEN_TICKS;
-//                 }
-//             }
-//             break;
-//         }
-//
-//         case ELEVATOR_STATE_MOVING_UP:
-//         {
-//             if (FSM_TravelTicksRemaining > 0U) {
-//                 FSM_TravelTicksRemaining--;
-//                 if (FSM_TravelTicksRemaining == 0U) {
-//                     elevator->FloorReached = TRUE;
-//                 }
-//             }
-//
-//             if (elevator->FloorReached == TRUE)
-//             {
-//                 __asm volatile ("CPSID I");
-//                 elevator->FloorReached = FALSE;
-//                 __asm volatile ("CPSIE I");
-//
-//                 if (elevator->CurrentFloor == (elevator->TargetFloor - 1U)) {
-//                     FSM_SetMotorSpeed(MOTOR_DUTY_SLOW);
-//                 }
-//
-//                 elevator->CurrentFloor++;
-//
-//                 if (elevator->CurrentFloor == elevator->TargetFloor)
-//                 {
-//                     elevator->CabinRequests[elevator->CurrentFloor] = FALSE;
-//                     elevator->State     = ELEVATOR_STATE_DOORS_OPEN;
-//                     elevator->Direction = ELEVATOR_DIR_NONE;
-//                     FSM_SetMotorSpeed(MOTOR_DUTY_STOP);
-//                     FSM_DoorTicksRemaining = DOOR_OPEN_TICKS;
-//                 }
-//                 else
-//                 {
-//                     FSM_TravelTicksRemaining = FLOOR_TRAVEL_TICKS;
-//                 }
-//             }
-//             break;
-//         }
-//
-//         case ELEVATOR_STATE_MOVING_DOWN:
-//         {
-//             if (FSM_TravelTicksRemaining > 0U) {
-//                 FSM_TravelTicksRemaining--;
-//                 if (FSM_TravelTicksRemaining == 0U) {
-//                     elevator->FloorReached = TRUE;
-//                 }
-//             }
-//
-//             if (elevator->FloorReached == TRUE)
-//             {
-//                 __asm volatile ("CPSID I");
-//                 elevator->FloorReached = FALSE;
-//                 __asm volatile ("CPSIE I");
-//
-//                 if (elevator->CurrentFloor == (elevator->TargetFloor + 1U)) {
-//                     FSM_SetMotorSpeed(MOTOR_DUTY_SLOW);
-//                 }
-//
-//                 elevator->CurrentFloor--;
-//
-//                 if (elevator->CurrentFloor == elevator->TargetFloor)
-//                 {
-//                     elevator->CabinRequests[elevator->CurrentFloor] = FALSE;
-//                     elevator->State     = ELEVATOR_STATE_DOORS_OPEN;
-//                     elevator->Direction = ELEVATOR_DIR_NONE;
-//                     FSM_SetMotorSpeed(MOTOR_DUTY_STOP);
-//                     FSM_DoorTicksRemaining = DOOR_OPEN_TICKS;
-//                 }
-//                 else
-//                 {
-//                     FSM_TravelTicksRemaining = FLOOR_TRAVEL_TICKS;
-//                 }
-//             }
-//             break;
-//         }
-//
-//         case ELEVATOR_STATE_DOORS_OPEN:
-//         {
-//             if (FSM_DoorTicksRemaining > 0U) {
-//                 FSM_DoorTicksRemaining--;
-//                 if (FSM_DoorTicksRemaining == 0U) {
-//                     elevator->DoorTimerExpired = TRUE;
-//                 }
-//             }
-//
-//             if (elevator->DoorTimerExpired == TRUE)
-//             {
-//                 __asm volatile ("CPSID I");
-//                 elevator->DoorTimerExpired = FALSE;
-//                 __asm volatile ("CPSIE I");
-//
-//                 if (FSM_HasAnyRequest(elevator) == TRUE)
-//                 {
-//                     uint8 next = FSM_FindNextFloor(elevator);
-//                     elevator->TargetFloor = next;
-//
-//                     if (next > elevator->CurrentFloor)
-//                     {
-//                         elevator->State     = ELEVATOR_STATE_MOVING_UP;
-//                         elevator->Direction = ELEVATOR_DIR_UP;
-//                         FSM_SetMotorSpeed(MOTOR_DUTY_FULL);
-//                         FSM_TravelTicksRemaining = FLOOR_TRAVEL_TICKS;
-//                     }
-//                     else if (next < elevator->CurrentFloor)
-//                     {
-//                         elevator->State     = ELEVATOR_STATE_MOVING_DOWN;
-//                         elevator->Direction = ELEVATOR_DIR_DOWN;
-//                         FSM_SetMotorSpeed(MOTOR_DUTY_FULL);
-//                         FSM_TravelTicksRemaining = FLOOR_TRAVEL_TICKS;
-//                     }
-//                     else
-//                     {
-//                         elevator->CabinRequests[next] = FALSE;
-//                         elevator->State               = ELEVATOR_STATE_DOORS_OPEN;
-//                         FSM_DoorTicksRemaining        = DOOR_OPEN_TICKS;
-//                     }
-//                 }
-//                 else
-//                 {
-//                     elevator->State     = ELEVATOR_STATE_IDLE;
-//                     elevator->Direction = ELEVATOR_DIR_NONE;
-//                 }
-//             }
-//             break;
-//         }
-//
-//         case ELEVATOR_STATE_EMERGENCY:
-//         {
-//             FSM_SetMotorSpeed(MOTOR_DUTY_STOP);
-//             break;
-//         }
-//
-//         default:
-//             break;
-//     }
-// }
 void ElevatorFSM_Tick(ElevatorData_t *elevator)
 {
     /* ── EMERGENCY overrides every state ── */
@@ -288,9 +99,9 @@ void ElevatorFSM_Tick(ElevatorData_t *elevator)
 
             if (elevator->FloorReached == TRUE)
             {
-                __asm volatile ("CPSID I");
+                Enter_Critical();
                 elevator->FloorReached = FALSE;
-                __asm volatile ("CPSIE I");
+                Exit_Critical();
 
                 /* 1. Increment Floor FIRST */
                 elevator->CurrentFloor++;
@@ -327,9 +138,9 @@ void ElevatorFSM_Tick(ElevatorData_t *elevator)
 
             if (elevator->FloorReached == TRUE)
             {
-                __asm volatile ("CPSID I");
+                Enter_Critical();
                 elevator->FloorReached = FALSE;
-                __asm volatile ("CPSIE I");
+                Exit_Critical();
 
                 /* 1. Decrement Floor FIRST */
                 elevator->CurrentFloor--;
@@ -366,9 +177,9 @@ void ElevatorFSM_Tick(ElevatorData_t *elevator)
 
             if (elevator->DoorTimerExpired == TRUE)
             {
-                __asm volatile ("CPSID I");
+                Enter_Critical();
                 elevator->DoorTimerExpired = FALSE;
-                __asm volatile ("CPSIE I");
+                Exit_Critical();
 
                 if (FSM_HasAnyRequest(elevator) == TRUE)
                 {
