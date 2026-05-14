@@ -9,6 +9,7 @@
 #include "Slave_Control.h"
 #include "Elevator_FSM.h"
 #include "Elevator_Types.h"
+#include "Critical.h"
 
 #define NVIC_IPR_BASE   ((volatile uint8 *)0xE000E400)
 #define IRQ_EXTI4       10U
@@ -32,6 +33,7 @@ static void Slave_PrepareTxFrame(void) { SlaveControl_BuildTxFrame(&SlaveTxFrame
 
 void SPI1_IRQHandler(void)
 {
+    Enter_Critical();
     if (SPI1->SR & (1U << 0)) /* Check RXNE */
     {
         ((uint8*)&SlaveRxFrame)[SlaveRxIndex] = SPI1->DR;
@@ -44,13 +46,16 @@ void SPI1_IRQHandler(void)
             SlaveRxIndex = 0U;
         }
     }
+    Exit_Critical();
 }
 
 static void Slave_CS_Rising_CB(void)
 {
+    Enter_Critical();
     SpiTimeoutCounter = 0U;
     SlaveRxIndex = 0U;
     Slave_PrepareTxFrame();
+    Exit_Critical();
 
     volatile uint8 dummy = SPI1->DR;
     (void)dummy;
@@ -135,9 +140,9 @@ int main(void)
     {
         if (FsmTickFlag == TRUE)
         {
-            __asm volatile ("CPSID I");
+            Enter_Critical();
             FsmTickFlag = FALSE;
-            __asm volatile ("CPSIE I");
+            Exit_Critical();
 
             SpiTimeoutCounter++;
             if (SpiTimeoutCounter >= 30U) {

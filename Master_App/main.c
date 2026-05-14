@@ -9,6 +9,7 @@
 #include "Dispatcher.h"
 #include "Elevator_FSM.h"
 #include "Elevator_Types.h"
+#include "Critical.h"
 #include <stdio.h>
 #include "Usart.h"
 #include <sys/stat.h>
@@ -285,10 +286,12 @@ int main(void)
     {
         if (SpiTransferComplete == TRUE)
         {
-            __asm volatile ("CPSID I");
+
+            Enter_Critical();
             SpiTransferComplete = FALSE;
             boolean isValid = SpiFrame_IsValid(&RxFrameBuffer);
-            __asm volatile ("CPSIE I");
+            Exit_Critical();
+
 
             if (isValid == TRUE) {
                 SpiCommFault = FALSE;
@@ -303,9 +306,9 @@ int main(void)
 
         if (FsmTickFlag == TRUE)
         {
-            __asm volatile ("CPSID I");
+            Enter_Critical();
             FsmTickFlag = FALSE;
-            __asm volatile ("CPSIE I");
+            Exit_Critical();
 
             LatchedHallCalls |= Dispatcher_GetHallCallMask();
             LatchedSlaveReq |= PendingSlaveRequestsMask;
@@ -323,9 +326,9 @@ int main(void)
                     if (masterElevator.EmergencyActive == TRUE) flags |= SPI_FLAG_EMERGENCY;
                     if (masterElevator.State == ELEVATOR_STATE_DOORS_OPEN) flags |= SPI_FLAG_DOORS_OPEN;
 
-                    __asm volatile ("CPSID I");
+                    Enter_Critical();
                     SpiFrame_Build((ElevatorData_t*)&masterElevator, PendingSlaveRequestsMask, flags, speed, &TxFrameBuffer);
-                    __asm volatile ("CPSIE I");
+                    Exit_Critical();
 
                     SpiMasterState = 1U;
                 }
